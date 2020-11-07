@@ -1,0 +1,11 @@
+Explain the game
+
+Explain the car & how it works, sensors etc.
+
+Explain the car logic (MLP)
+
+Explain genetic evolution then yeye
+
+Show timelapse yeye
+
+It has only 2 sensors, show how that can be a graph.. INPUT X, Y

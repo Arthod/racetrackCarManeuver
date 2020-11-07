@@ -1,0 +1,22 @@
+
+body {
+    overflow-x: hidden;
+}
+.progress-bar {
+    background-color: #9999ff;
+    -webkit-transition: none !important;
+    transition: none !important;
+}
+table {
+    border: 1px solid;
+    table-layout: fixed ;
+}
+tr {
+    border-bottom: 1px #999999 solid;
+}
+td {
+    border-right: 1px #999999 solid;
+}
+th {
+    text-align: center;
+}
