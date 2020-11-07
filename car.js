@@ -6,8 +6,8 @@ class Car {
     static h = 25;
     static sensorsMaxDist = 500;
     static sensors = [-0.4, -1, 0.4, 1];
-    static sensorsAccuracy = 5;
-    static velMax = 100;
+    static sensorsAccuracy = 1; // The larger the less precise
+    static velMax = 10;
 
     constructor(x, y, angle) {
         this.x = x;
@@ -78,20 +78,19 @@ class Car {
                 }
             } else {
                 let input = [this.sensorsRange[0], this.sensorsRange[1], this.sensorsRange[2], this.sensorsRange[3], this.vel];
-                let output = this.brain.forwardPropagation(input)
+                let output = this.brain.forwardPropagation(input);
 
-                this.vel = Math.min(this.vel, Car.velMax);
                 if (output[0] > 0.5) {    // Rotate left
-                    this.angle -= this.vel / 65;
+                    this.angle -= this.vel / 50; //this.vel / 65
                 }
                 if (output[1] > 0.5) {   // Rotate right
-                    this.angle += this.vel / 65;
+                    this.angle += this.vel / 50;
                 }
                 if (output[2] > 0.5) {  // Speed up
-                    this.vel += 0.05
+                    this.vel = Math.min(this.vel + 0.05, Car.velMax);
                 }
                 if (output[3] > 0.5) {  // Brake
-                    this.vel = Math.max(this.vel - 0.1, 0)
+                    this.vel = Math.max(this.vel - 0.1, 0);
                 }
             }
         }
@@ -124,14 +123,20 @@ class Car {
 
     draw(ctx) {
         this.drawCar(ctx);
-        this.drawSensors(ctx);
+        if (this.alive) {
+            this.drawSensors(ctx);
+        }
     }
 
     drawCar(ctx) {
         ctx.translate(this.x, this.y);
 
         ctx.rotate(this.angle);
-        ctx.fillStyle = "rgb(200, " + this.fitness*4 + ", 100, 255)";
+        if (this.alive) {
+            ctx.fillStyle = "rgb(50, 200, 50, 255)";
+        } else {
+            ctx.fillStyle = "rgb(100, 100, 100, 255)";
+        }
         ctx.strokeStyle = "#000000";
         ctx.fillRect(-Car.w/2, -Car.h/2, Car.w, Car.h);
         ctx.strokeRect(-Car.w/2, -Car.h/2, Car.w, Car.h);

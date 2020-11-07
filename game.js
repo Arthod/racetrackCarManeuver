@@ -93,39 +93,51 @@ function drawCarNetwork() {
     let car = cars[0];
 
     let circleRadius = 15
-    let x0 = 200;
-    let x1 = 330;
+    let x0 = 140;
+    let x1 = 400;
     let x2 = 660;
 
     for (let i = 0; i < car.brain.inputNeuronsAmount; i++) {
+        let yPos = 60 * i + 20;
         ctx.beginPath();
-        ctx.arc(x0, 36 * i + 20, circleRadius, 0, 2 * Math.PI);
-        ctx.fillText(myGameArea.networkCanvasInputTexts[i], x0 - 120, 36 * i + 20)
+        ctx.arc(x0, yPos, circleRadius, 0, 2 * Math.PI);
+        ctx.fillText(myGameArea.networkCanvasInputTexts[i], x0 - 120, yPos);
         ctx.stroke();
     }
 
     for (let i = 0; i < car.brain.hiddenNeuronsAmount; i++) {
+        let yPos = 60 * i + 20;
         for (let j = 0; j < car.brain.inputNeuronsAmount; j++) {
             ctx.beginPath();
-            ctx.moveTo(x0, 36 * j + 20);
-            ctx.lineTo(x1, 36 * i + 60);
+            ctx.moveTo(x0, 60 * j + 20);
+            ctx.lineTo(x1, yPos);
             ctx.stroke();
         }
         ctx.beginPath();
-        ctx.arc(x1, 36 * i + 60, circleRadius, 0, 2 * Math.PI);
+        ctx.arc(x1, yPos, circleRadius, 0, 2 * Math.PI);
+        let gray = car.brain.layer1[i] * 255;
+        ctx.fillStyle = 'rgb(' + gray + ', ' + gray + ', ' + gray + ', 255)';
+        ctx.fill();
         ctx.stroke();
     }
 
     for (let i = 0; i < car.brain.outputNeuronsAmount; i++) {
+        let yPos = 60 * i + 50;
         for (let j = 0; j < car.brain.hiddenNeuronsAmount; j++) {
-            ctx.beginPath();
-            ctx.moveTo(x1, 36 * j + 60);
-            ctx.lineTo(x2, 36 * i + 100);
-            ctx.stroke();
+            if (car.brain.weights[1][i][j] > -100) {
+                ctx.beginPath();
+                ctx.moveTo(x1, 60 * j + 20);
+                ctx.lineTo(x2, yPos);
+                ctx.stroke();
+            }
         }
         ctx.beginPath();
-        ctx.arc(x2, 36 * i + 100, circleRadius, 0, 2 * Math.PI);
-        ctx.fillText(myGameArea.networkCanvasOutputTexts[i], x2 + 30, 36 * i + 100)
+        ctx.arc(x2, yPos, circleRadius, 0, 2 * Math.PI);
+        let gray = Math.round(car.brain.layer2[i]) * 255;
+        ctx.fillStyle = 'rgb(0, ' + gray + ', 0, 255)';
+        ctx.fill();
+        ctx.fillStyle = 'black';
+        ctx.fillText(myGameArea.networkCanvasOutputTexts[i], x2 + 30, yPos);
         ctx.stroke();
     }
 }

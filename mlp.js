@@ -7,30 +7,34 @@ class MLP {
 
         this.weights = [];
         this.biases = [];
+
+        this.layer0 = [0, 0, 0, 0, 0]
+        this.layer1 = [0, 0, 0, 0, 0]
+        this.layer2 = [0, 0, 0, 0]
     }
 
     forwardPropagation(input) {
-        let layer0 = input;
+        this.layer0 = input;
         
         // LAYER 1
-        let layer1 = [];
+        this.layer1 = [];
         for (let i = 0; i < this.hiddenNeuronsAmount; i++) {
             let sum = 0;
             for (let j = 0; j < this.inputNeuronsAmount; j++) {
-                sum += this.weights[0][i][j] * layer0[j] + this.biases[0][i];
+                sum += this.weights[0][i][j] * this.layer0[j] + this.biases[0][i];
             }
-            layer1.push(this.activation(sum));
+            this.layer1.push(this.activation(sum));
         }
         // LAYER 2
-        let layer2 = [];
+        this.layer2 = [];
         for (let i = 0; i < this.outputNeuronsAmount; i++) {
             let sum = 0;
             for (let j = 0; j < this.hiddenNeuronsAmount; j++) {
-                sum += this.weights[1][i][j] * layer1[j] + this.biases[1][i];
+                sum += this.weights[1][i][j] * this.layer1[j] + this.biases[1][i];
             }
-            layer2.push(this.activation(sum));
+            this.layer2.push(this.activation(sum));
         }
-        return layer2;
+        return this.layer2;
     }
 
     generateWeightsAndBiases() {
