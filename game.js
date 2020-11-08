@@ -3,13 +3,15 @@ var keysPressed = [];
 leftTrackPoints = [];
 rightTrackPoints = [];
 
-trackWidth = 45;
+trackWidth = 60;
 trackPoints = [[0, 250], [150, 246], [184, 228], [186, 202], [198, 169], [220, 131], [256, 110], [300, 98], [326, 104], [357, 148], [366, 177], [370, 223], [365, 263], [363, 304], [379, 331], [402, 346], [443, 348], [480, 347], [504, 347], [631, 347], [729, 352], [850, 357], [884, 395], [882, 451], [882, 497], [853, 532], [804, 533], [788, 505], [742, 481], [696, 496], [683, 577], [682, 636], [735, 665], [811, 667], [881, 687], [875, 747], [808, 816], [677, 831], [561, 822], [504, 810], [447, 749], [468, 695], [524, 596], [489, 485], [330, 494], [279, 547], [252, 609], [232, 656], [153, 696], [50, 696], [0, 695]];
+//trackPoints = [[0, 250], [75, 248], [150, 246], [167, 237], [184, 228], [185, 215], [186, 202], [192, 185], [198, 169], [209, 150], [220, 131], [238, 120], [256, 110], [278, 104], [300, 98], [313, 101], [326, 104], [341, 126], [357, 148], [361, 162], [366, 177], [368, 200], [370, 223], [367, 243], [365, 263], [364, 283], [363, 304], [371, 317], [379, 331], [390, 338], [402, 346], [422, 347], [443, 348], [461, 347], [480, 347], [492, 347], [504, 347], [567, 347], [631, 347], [680, 349], [729, 352], [789, 354], [850, 357], [867, 376], [884, 395], [883, 423], [882, 451], [882, 474], [882, 497], [867, 514], [853, 532], [828, 532], [804, 533], [796, 519], [788, 505], [765, 493], [742, 481], [719, 488], [696, 496], [689, 536], [683, 577], [682, 606], [682, 636], [708, 650], [735, 665], [773, 666], [811, 667], [846, 677], [881, 687], [878, 717], [875, 747], [841, 781], [808, 816], [742, 823], [677, 831], [619, 826], [561, 822], [532, 816], [504, 810], [475, 779], [447, 749], [457, 722], [468, 695], [496, 645], [524, 596], [506, 540], [489, 485], [409, 489], [330, 494], [304, 520], [279, 547], [265, 578], [252, 609], [242, 632], [232, 656], [192, 676], [153, 696], [101, 696], [50, 696], [25, 695]]
+
 generateTrackPointsBorders();
 
 function startGame() {
     cars = [];
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 1; i++) {
         let car = new Car(0, 250, rad(0))
         car.brain.generateWeightsAndBiases()
         cars.push(car);
@@ -35,8 +37,8 @@ var myGameArea = {
         this.networkCanvas.height = 300;
         this.networkContext = this.networkCanvas.getContext("2d");
         this.networkContext.font = "12px Arial";
-        this.networkCanvasOutputTexts = ["Rotate Left", "Rotate Right", "Accelerate", "Brake"]
-        this.networkCanvasInputTexts = ["Sensor leftmost", "Sensor left", "Sensor right", "Sensor rightmost", "Velocity"]
+        this.networkCanvasOutputTexts = ["Accelerate", "Brake", "Rotate left", "Rotate right"]
+        this.networkCanvasInputTexts = ["Sensor leftmost", "Sensor left", "Sensor right", "Sensor rightmost", "X velocity", "Y velocity", "Angle", "Angle velocity"]
 
         // Draw the map (without cars)
         drawLines(this.context, trackPoints);
@@ -50,7 +52,7 @@ var myGameArea = {
         this.generationNumber = 0;
         this.drawingCustomMap = false;
         this.populationKillPercentage = 0.80;
-        this.populationMax = 100;
+        this.populationMax = 1;
     },
     
     clear : function() {
@@ -97,40 +99,20 @@ function drawCarNetwork() {
     let x1 = 400;
     let x2 = 660;
 
-    for (let i = 0; i < car.brain.inputNeuronsAmount; i++) {
-        let yPos = 60 * i + 20;
-        ctx.beginPath();
-        ctx.arc(x0, yPos, circleRadius, 0, 2 * Math.PI);
-        ctx.fillText(myGameArea.networkCanvasInputTexts[i], x0 - 120, yPos);
-        ctx.stroke();
-    }
-
-    for (let i = 0; i < car.brain.hiddenNeuronsAmount; i++) {
-        let yPos = 60 * i + 20;
-        for (let j = 0; j < car.brain.inputNeuronsAmount; j++) {
-            ctx.beginPath();
-            ctx.moveTo(x0, 60 * j + 20);
-            ctx.lineTo(x1, yPos);
-            ctx.stroke();
-        }
-        ctx.beginPath();
-        ctx.arc(x1, yPos, circleRadius, 0, 2 * Math.PI);
-        let gray = car.brain.layer1[i] * 255;
-        ctx.fillStyle = 'rgb(' + gray + ', ' + gray + ', ' + gray + ', 255)';
-        ctx.fill();
-        ctx.stroke();
-    }
-
     for (let i = 0; i < car.brain.outputNeuronsAmount; i++) {
         let yPos = 60 * i + 50;
         for (let j = 0; j < car.brain.hiddenNeuronsAmount; j++) {
-            if (car.brain.weights[1][i][j] > -100) {
-                ctx.beginPath();
-                ctx.moveTo(x1, 60 * j + 20);
-                ctx.lineTo(x2, yPos);
-                ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x1, 50 * j + 20);
+            ctx.lineTo(x2, yPos);
+            if (car.brain.weights[1][i][j] > 0) {
+                ctx.strokeStyle = 'rgb(0, 0, 0, 255)';
+            } else {
+                ctx.strokeStyle = 'rgb(255, 0, 0, 255)';
             }
+            ctx.stroke();
         }
+        ctx.strokeStyle = "#000000"
         ctx.beginPath();
         ctx.arc(x2, yPos, circleRadius, 0, 2 * Math.PI);
         let gray = Math.round(car.brain.layer2[i]) * 255;
@@ -138,6 +120,40 @@ function drawCarNetwork() {
         ctx.fill();
         ctx.fillStyle = 'black';
         ctx.fillText(myGameArea.networkCanvasOutputTexts[i], x2 + 30, yPos);
+        ctx.stroke();
+    }
+
+    for (let i = 0; i < car.brain.hiddenNeuronsAmount; i++) {
+        let yPos = 50 * i + 20;
+        for (let j = 0; j < car.brain.inputNeuronsAmount; j++) {
+            ctx.beginPath();
+            ctx.moveTo(x0, 36 * j + 20);
+            ctx.lineTo(x1, yPos);
+            if (car.brain.weights[0][i][j] > 0) {
+                ctx.strokeStyle = 'rgb(0, 0, 0, 255)';
+            } else {
+                ctx.strokeStyle = 'rgb(255, 0, 0, 255)';
+            }
+            ctx.stroke();
+        }
+        ctx.strokeStyle = "#000000"
+        ctx.beginPath();
+        ctx.arc(x1, yPos, circleRadius, 0, 2 * Math.PI);
+        let gray = (car.brain.layer1[i]) * 255;
+        ctx.fillStyle = 'rgb(' + gray + ', ' + gray + ', ' + gray + ', 255)';
+        ctx.fill();
+        ctx.stroke();
+    }
+
+    for (let i = 0; i < car.brain.inputNeuronsAmount; i++) {
+        let yPos = 36 * i + 20;
+        ctx.beginPath();
+        ctx.arc(x0, yPos, circleRadius, 0, 2 * Math.PI);
+        let gray = Math.round(car.brain.layer0[i]);
+        ctx.fillStyle = 'rgb(' + gray + ', ' + gray + ', ' + gray + ', 255)';
+        ctx.fill();
+        ctx.fillStyle = 'black';
+        ctx.fillText(myGameArea.networkCanvasInputTexts[i], x0 - 120, yPos);
         ctx.stroke();
     }
 }
@@ -210,6 +226,7 @@ function killAllButBest() {
     });
     savedCar = cars[0];
     cars = [savedCar]
+    Car.DEBUGCHECK = true;
 }
 
 function draw(ctx) {
@@ -232,7 +249,7 @@ function drawLines(ctx, points) {
     ctx.lineWidth = trackWidth * 1.4;
     for (let i = 1; i < points.length; i++) {
         ctx.beginPath();
-        ctx.strokeStyle = "rgb(2, " + Math.floor(255 * (i / points.length)) + ", 2, 255)";
+        ctx.strokeStyle = "rgb(2, " + Math.floor(255 * (i / points.length)) + ", 20, 255)";
         ctx.moveTo(points[i - 1][0], points[i - 1][1])
         ctx.lineTo(points[i][0], points[i][1]);
         ctx.stroke()

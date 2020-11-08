@@ -2,20 +2,29 @@ var key;
 
 class Car {
     static aliveAmount;
-    static w = 50;
-    static h = 25;
+    static w = 40;
+    static h = 20;
     static sensorsMaxDist = 500;
-    static sensors = [-0.4, -1, 0.4, 1];
+    static sensors = [-0.25, -1.25, 0.25, 1.25];
     static sensorsAccuracy = 1; // The larger the less precise
-    static velMax = 10;
+
+    static accSpeed = 0.25;   // How fast the car can accelerate
+    static angularDrag = 0.8;   // How fast the car stops spinning
+    static turnSpeed = 300   // How fast the car can turn
+    static drag = 0.94;
+
+    static DEBUGCHECK = false;
 
     constructor(x, y, angle) {
         this.x = x;
         this.y = y;
-        this.angle = angle
+        
+        // Drive properties
+        this.xVel = 0
+        this.yVel = 0
+        this.angle = angle;
+        this.angularVel = 0;
 
-        this.vel = 0;
-        this.acc = 0;
         this.alive = true;
         this.fitness = 0;
         this.visited = [];
@@ -25,16 +34,21 @@ class Car {
         // MLP:
         // Input is sensors range and speed.
         // Output is turn left, turn right, speed up or brake.
-        this.brain = new MLP(5, 5, 4);
+        this.brain = new MLP(8, 6, 4);
 
-        this.playerControlled = false;
+        this.playerControlled = true;
     }
 
     tick(keysPressed, barriersMap, time, timeout) {
         if (this.alive) {
             this.sensorsRange = this.getSensorDistances(barriersMap);
-            this.x += Math.cos(this.angle) * this.vel;
-            this.y += Math.sin(this.angle) * this.vel;
+            
+            this.x += this.xVel;
+            this.y += this.yVel;
+            this.xVel = this.xVel * Car.drag//Math.max(this.xVel * Car.drag, 0.0001);
+            this.yVel = this.yVel * Car.drag//Math.max(this.yVel * Car.drag, 0.0001);
+            this.angle += this.angularVel;
+            this.angularVel = this.angularVel * Car.angularDrag// Math.max(this.angularVel * Car.angularDrag, 0.0001);
             
             let i = (Math.floor(this.y) * 960 + Math.floor(this.x)) * 4;
             let data = barriersMap.data;
@@ -45,7 +59,7 @@ class Car {
                 t = data[i + 3];
             // Death
             
-            if ((this.x < 0 || this.x > 960) || (this.y < 0 || this.y > 960)) { // Death by restriction
+            if (((this.x < 0 && this.y > 300) || this.x > 960) || (this.y < 0 || this.y > 960)) { // Death by restriction
                 this.alive = false;
                 Car.aliveAmount--;
                 this.fitness += (1 - (time / timeout)) * this.fitness;
@@ -56,41 +70,42 @@ class Car {
             }
 
             // Fitness
-            if (r == 2 && b == 2) {
-                if (!this.visited[g]) {
-                    this.visited[g] = true;
-                    this.fitness ++;
-                }
+            if (r == 2 && b == 20 && !this.visited[g]) {
+                this.visited[g] = true;
+                this.fitness ++;
             }
 
+            let input = [this.sensorsRange[0], this.sensorsRange[1], this.sensorsRange[2], this.sensorsRange[3], this.xVel, this.yVel, this.angle, this.angularVel];
+            this.output = this.brain.forwardPropagation(input);
             if (this.playerControlled) {
                 if (keysPressed["w"]) {
-                    this.acc = Math.min(this.acc + 0.025, 2);
+                    this.xVel += Math.cos(this.angle) * Car.accSpeed;
+                    this.yVel += Math.sin(this.angle) * Car.accSpeed;
                 }
                 if (keysPressed["s"]) {
-                    this.acc = Math.max(this.acc - 0.05, 0);
+                    this.xVel -= Math.cos(this.angle) * Car.accSpeed;
+                    this.yVel -= Math.sin(this.angle) * Car.accSpeed;
                 }
                 if (keysPressed["a"]) {
-                    this.angle -= 0.5;  // this.vel  / 25
+                    this.angularVel -= Math.sqrt(Math.pow(this.xVel, 2) + Math.pow(this.yVel, 2)) / Car.turnSpeed;
                 }
                 if (keysPressed["d"]) {
-                    this.angle += 0.5;
+                    this.angularVel += Math.sqrt(Math.pow(this.xVel, 2) + Math.pow(this.yVel, 2)) / Car.turnSpeed;
                 }
             } else {
-                let input = [this.sensorsRange[0], this.sensorsRange[1], this.sensorsRange[2], this.sensorsRange[3], this.vel];
-                let output = this.brain.forwardPropagation(input);
-
-                if (output[0] > 0.5) {    // Rotate left
-                    this.angle -= this.vel / 50; //this.vel / 65
+                if (this.output[0] > 0.5) {    // Accelerate
+                    this.xVel += Math.cos(this.angle) * Car.accSpeed;
+                    this.yVel += Math.sin(this.angle) * Car.accSpeed;
                 }
-                if (output[1] > 0.5) {   // Rotate right
-                    this.angle += this.vel / 50;
+                if (this.output[1] > 0.5) {   // Brake
+                    this.xVel -= Math.cos(this.angle) * Car.accSpeed;
+                    this.yVel -= Math.sin(this.angle) * Car.accSpeed;
                 }
-                if (output[2] > 0.5) {  // Speed up
-                    this.vel = Math.min(this.vel + 0.05, Car.velMax);
+                if (this.output[2] > 0.5) {  // Rotate left
+                    this.angularVel -= Math.sqrt(Math.pow(this.xVel, 2) + Math.pow(this.yVel, 2)) / Car.turnSpeed;
                 }
-                if (output[3] > 0.5) {  // Brake
-                    this.vel = Math.max(this.vel - 0.1, 0);
+                if (this.output[3] > 0.5) {  // Rotate right
+                    this.angularVel += Math.sqrt(Math.pow(this.xVel, 2) + Math.pow(this.yVel, 2)) / Car.turnSpeed;
                 }
             }
         }
@@ -141,6 +156,34 @@ class Car {
         ctx.fillRect(-Car.w/2, -Car.h/2, Car.w, Car.h);
         ctx.strokeRect(-Car.w/2, -Car.h/2, Car.w, Car.h);
         
+        if (Car.DEBUGCHECK) {
+            // Brakes
+            if (this.output[1] > 0.5) {
+                ctx.fillStyle = "rgb(255, 0, 0, 255)";
+            } else {
+                ctx.fillStyle = "rgb(0, 0, 0, 255)";
+            }
+            ctx.fillRect(-Car.w/2, -Car.h/2, 5, 5);
+            ctx.fillRect(-Car.w/2, Car.h/2-5, 5, 5);
+
+            // Rotations
+            // Rotate left
+            if (this.output[2] > 0.5) {
+                ctx.fillStyle = "rgb(255, 255, 0, 255)";
+            } else {
+                ctx.fillStyle = "rgb(0, 0, 0, 255)";
+            }
+            ctx.fillRect(Car.w/2-5, -Car.h/2, 5, 5);
+
+            // Rotate right
+            if (this.output[3] > 0.5) {
+                ctx.fillStyle = "rgb(255, 255, 0, 255)";
+            } else {
+                ctx.fillStyle = "rgb(0, 0, 0, 255)";
+            }
+            ctx.fillRect(Car.w/2-5, Car.h/2-5, 5, 5);
+        }
+        
         ctx.translate(-this.x, -this.y);
         ctx.setTransform(1, 0, 0, 1, 0, 0);
     }
@@ -160,8 +203,9 @@ class Car {
     reset() {
         this.x = 0;
         this.y = 250;
-        this.vel = 0;
-        this.acc = 0;
+        this.xVel = 0
+        this.yVel = 0
+        this.angularVel = 0;
         this.angle = rad(0)
         this.alive = true;
         this.fitness = 0;

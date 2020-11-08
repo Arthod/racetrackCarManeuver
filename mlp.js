@@ -8,9 +8,9 @@ class MLP {
         this.weights = [];
         this.biases = [];
 
-        this.layer0 = [0, 0, 0, 0, 0]
-        this.layer1 = [0, 0, 0, 0, 0]
-        this.layer2 = [0, 0, 0, 0]
+        this.layer0 = [0,0,0,0,0,0,0,0]
+        this.layer1 = [0,0,0,0,0,0]
+        this.layer2 = [0,0,0,0]
     }
 
     forwardPropagation(input) {
