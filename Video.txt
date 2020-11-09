@@ -1,11 +1,43 @@
-Explain the game
+***Explain the game***
+Assume we have a game. The point of this game is to get the car across the track alive and in a reasonable amount of time
+The car is only allowed to drive on the road, and if it hits any barricades it dies..
 
-Explain the car & how it works, sensors etc.
+***Explain the car & how it works***
+There are four ways to control the car. The cars velocity can be accelerated the front direction, backwards direction
+And then there is rotation. The car can rotate left and right.
+The speed at which a car can rotate depends on the velocity of the car. The faster the car is going
+the faster the car will be able to rotate.
+Because the car drifts at high velocity when rotating it's actually not that easy to manually control
+the car and reach the end.
 
-Explain the car logic (MLP)
+***Explain the car logic (MLP) (sensors)***
+Now imagine the car had a brain. This brain would input relevant information about the car like
+it's current angle, it's relevant velocities, like the x_velocity, y_velocity and angular velocity. 
+The brain would also need to know its position relative to the race track. Here we could use 4 sensors that 
+would detect the distance to the end of the track of the racetrack. The brain would then tell the car
+whether to steer left, steer right, accelerate or deaccelerate.
 
-Explain genetic evolution then yeye
+The brain of teh car will be a multilayered perceptron. You may know this as a Neural Network.
+This funny thing contains of layers and neurons, and is party inspired by how real brains function
+The basic idea here is that input is propagated forward through arithmetic and then received as output.
 
-Show timelapse yeye
+***Explain genetic evolution then yeye***
+Ofcourse the problem is, we don't actually have an optimal brain that can drive the track succesfully.
+So here is how we can generate such a brain. Lets say we start with 100 cars. All these cars' brains are
+randomly initialized. At the start all cars will do badly as they are just taking random actions. But
+some cars are going to do worse than others. We take the bottom 80% of the cars that did worst and kill them.
+Then we copy our top 20% pops and mutate them randomly so we have our 100% pops again. This is called one generation.
+A series of these generations and we achieve a car that is able to navigate through the track. We can see
+that the cars slowly get better and better throughout the generations.
+
+***After small simulation, show that car is not hardtrained for this specific track***
+If we want to see how much these cars actually learnt we can put them on a racetrack theyve never seen before
+and see if they make it to the end.
+It's important to remember that the cars dont only learn to drive this specific race track. They
+actually learn to navigate through most tracks with same format.
+
+***Maybe show local minimas***
+
+***Show timelapse yeye***
 
 It has only 2 sensors, show how that can be a graph.. INPUT X, Y

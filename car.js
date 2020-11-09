@@ -4,8 +4,8 @@ class Car {
     static aliveAmount;
     static w = 40;
     static h = 20;
-    static sensorsMaxDist = 500;
-    static sensors = [-0.25, -1.25, 0.25, 1.25];
+    static sensorsMaxDist = 400;
+    static sensors = [-0.25, -1, 0.25, 1];
     static sensorsAccuracy = 1; // The larger the less precise
 
     static accSpeed = 0.25;   // How fast the car can accelerate
@@ -34,9 +34,9 @@ class Car {
         // MLP:
         // Input is sensors range and speed.
         // Output is turn left, turn right, speed up or brake.
-        this.brain = new MLP(8, 6, 4);
+        this.brain = new MLP(8, 6, 3);
 
-        this.playerControlled = true;
+        this.playerControlled = false;
     }
 
     tick(keysPressed, barriersMap, time, timeout) {
@@ -97,14 +97,10 @@ class Car {
                     this.xVel += Math.cos(this.angle) * Car.accSpeed;
                     this.yVel += Math.sin(this.angle) * Car.accSpeed;
                 }
-                if (this.output[1] > 0.5) {   // Brake
-                    this.xVel -= Math.cos(this.angle) * Car.accSpeed;
-                    this.yVel -= Math.sin(this.angle) * Car.accSpeed;
-                }
-                if (this.output[2] > 0.5) {  // Rotate left
+                if (this.output[1] > 0.5) {  // Rotate left
                     this.angularVel -= Math.sqrt(Math.pow(this.xVel, 2) + Math.pow(this.yVel, 2)) / Car.turnSpeed;
                 }
-                if (this.output[3] > 0.5) {  // Rotate right
+                if (this.output[2] > 0.5) {  // Rotate right
                     this.angularVel += Math.sqrt(Math.pow(this.xVel, 2) + Math.pow(this.yVel, 2)) / Car.turnSpeed;
                 }
             }
@@ -138,7 +134,7 @@ class Car {
 
     draw(ctx) {
         this.drawCar(ctx);
-        if (this.alive) {
+        if (this.alive && Car.DEBUGCHECK) {
             this.drawSensors(ctx);
         }
     }

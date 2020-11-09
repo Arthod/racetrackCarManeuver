@@ -11,7 +11,7 @@ generateTrackPointsBorders();
 
 function startGame() {
     cars = [];
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 100; i++) {
         let car = new Car(0, 250, rad(0))
         car.brain.generateWeightsAndBiases()
         cars.push(car);
@@ -29,7 +29,7 @@ var myGameArea = {
         this.gameTickInterval = setInterval(tick, 1000/60);
         this.HTMLFastUpdateInterval = setInterval(HTMLFastUpdateInterval, 50);
         this.HTMLUpdateInterval = setInterval(HTMLUpdateInterval, 500);
-        this.context.font = "16px Arial";
+        this.context.font = "26px Arial";
 
         // Network
         this.networkCanvas = document.getElementById("gameNetworkCanvas")
@@ -37,7 +37,7 @@ var myGameArea = {
         this.networkCanvas.height = 300;
         this.networkContext = this.networkCanvas.getContext("2d");
         this.networkContext.font = "12px Arial";
-        this.networkCanvasOutputTexts = ["Accelerate", "Brake", "Rotate left", "Rotate right"]
+        this.networkCanvasOutputTexts = ["Accelerate", "Rotate left", "Rotate right"]
         this.networkCanvasInputTexts = ["Sensor leftmost", "Sensor left", "Sensor right", "Sensor rightmost", "X velocity", "Y velocity", "Angle", "Angle velocity"]
 
         // Draw the map (without cars)
@@ -51,8 +51,8 @@ var myGameArea = {
         this.mouseClickTimer = 0;
         this.generationNumber = 0;
         this.drawingCustomMap = false;
-        this.populationKillPercentage = 0.80;
-        this.populationMax = 1;
+        this.populationKillPercentage = 0.50;
+        this.populationMax = 100;
     },
     
     clear : function() {
@@ -100,7 +100,7 @@ function drawCarNetwork() {
     let x2 = 660;
 
     for (let i = 0; i < car.brain.outputNeuronsAmount; i++) {
-        let yPos = 60 * i + 50;
+        let yPos = 60 * i + 80;
         for (let j = 0; j < car.brain.hiddenNeuronsAmount; j++) {
             ctx.beginPath();
             ctx.moveTo(x1, 50 * j + 20);
@@ -115,8 +115,13 @@ function drawCarNetwork() {
         ctx.strokeStyle = "#000000"
         ctx.beginPath();
         ctx.arc(x2, yPos, circleRadius, 0, 2 * Math.PI);
-        let gray = Math.round(car.brain.layer2[i]) * 255;
-        ctx.fillStyle = 'rgb(0, ' + gray + ', 0, 255)';
+        let gray = car.brain.layer2[i];
+        if (gray > 0.5) {
+            gray = 0;
+        } else {
+            gray = 255;
+        }
+        ctx.fillStyle = 'rgb(' + gray + ', ' + gray + ', ' + gray + ', 255)';
         ctx.fill();
         ctx.fillStyle = 'black';
         ctx.fillText(myGameArea.networkCanvasOutputTexts[i], x2 + 30, yPos);
@@ -139,7 +144,7 @@ function drawCarNetwork() {
         ctx.strokeStyle = "#000000"
         ctx.beginPath();
         ctx.arc(x1, yPos, circleRadius, 0, 2 * Math.PI);
-        let gray = (car.brain.layer1[i]) * 255;
+        let gray = Math.round((1 - car.brain.layer1[i]) * 255);
         ctx.fillStyle = 'rgb(' + gray + ', ' + gray + ', ' + gray + ', 255)';
         ctx.fill();
         ctx.stroke();
@@ -149,7 +154,16 @@ function drawCarNetwork() {
         let yPos = 36 * i + 20;
         ctx.beginPath();
         ctx.arc(x0, yPos, circleRadius, 0, 2 * Math.PI);
-        let gray = Math.round(car.brain.layer0[i]);
+        let gray;
+        if (i < 4) {
+            gray = Math.round((1 - (car.brain.layer0[i] / Car.sensorsMaxDist)) * 255);
+        } else {
+            if (i == 3 || i == 4) {
+                gray = Math.round((1 - (car.brain.layer0[i] / 4)) * 255);
+            } else {
+                gray = Math.round((1 - (car.brain.layer0[i] / 10)) * 255);
+            }
+        }
         ctx.fillStyle = 'rgb(' + gray + ', ' + gray + ', ' + gray + ', 255)';
         ctx.fill();
         ctx.fillStyle = 'black';
@@ -238,6 +252,8 @@ function draw(ctx) {
         cars[i].draw(ctx);
     }
 
+    ctx.fillStyle = "#ffffff";
+    ctx.fillText("Generation " + myGameArea.generationNumber, 0, 26);
     ctx.fillStyle = "#000000";
 }
 
